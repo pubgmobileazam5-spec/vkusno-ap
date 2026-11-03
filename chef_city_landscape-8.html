@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101a20">
+<title>Chef City — Living City</title>
+<style>
+:root{--glass:rgba(13,23,30,.78);--line:rgba(255,255,255,.19);--gold:#ffc66d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a6d4e0;color:#fff;font-family:Inter,system-ui,Arial,sans-serif;touch-action:none}
+canvas{display:block}
+#ui{position:fixed;inset:0;pointer-events:none}
+.glass{background:var(--glass);border:1px solid var(--line);box-shadow:0 8px 28px #07121a55;backdrop-filter:blur(12px)}
+#top{position:absolute;left:18px;right:18px;top:14px;display:flex;align-items:flex-start;gap:12px}
+#quest{padding:11px 16px;border-radius:14px;min-width:260px;max-width:42vw}
+.kicker{font-size:10px;letter-spacing:2px;color:var(--gold);font-weight:900}
+#quest strong{display:block;font-size:14px;margin-top:3px}
+#money{margin-left:auto;padding:12px 17px;border-radius:14px;font-weight:900;font-size:17px}
+button{pointer-events:auto;color:#fff;border:1px solid #ffffff35;background:rgba(18,29,36,.86);border-radius:15px;font:700 13px system-ui;box-shadow:0 5px 15px #0003;touch-action:none}
+button:active{transform:scale(.96);background:#334650}
+#pause{width:46px;height:46px;font-size:20px;border-radius:50%}
+#joy{pointer-events:auto;position:absolute;left:26px;bottom:26px;width:142px;height:142px;border-radius:50%;border:1px solid #ffffff75;background:radial-gradient(circle,#ffffff1a,#09151a88);box-shadow:inset 0 0 0 10px #ffffff08}
+#knob{position:absolute;left:43px;top:43px;width:54px;height:54px;border-radius:50%;background:linear-gradient(145deg,#fff9e9,#d2d8dc);border:2px solid white;box-shadow:0 5px 15px #0005}
+#actions{position:absolute;right:22px;bottom:24px;display:flex;align-items:flex-end;gap:10px}
+.action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:78px;height:72px;border-radius:20px;font-size:24px}
+.action span{font-size:10px;letter-spacing:.2px}
+#interact{width:94px;height:88px;border-color:#ffcf7c88;background:linear-gradient(145deg,#c88b3d,#7f5427)}
+#run{position:absolute;right:25px;bottom:140px;width:70px;height:70px;border-radius:50%;font-size:25px}
+#run span{display:block;font-size:10px}
+#prompt{display:none!important}
+#gps{padding:11px 12px;font-size:12px;font-weight:900}
+#gpsbeam{position:absolute;display:none;left:50%;top:66px;transform:translateX(-50%);padding:6px 10px;border-radius:9px;background:#b98a20dd;color:#fff5c7;font-size:10px;font-weight:900;letter-spacing:.5px}
+
+#area{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:10px;letter-spacing:3px;color:#ffffffb0;text-shadow:0 2px 6px #000}
+#modal{pointer-events:auto;display:none;position:fixed;inset:0;background:#050b10a8;backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:18px}
+#card{position:relative;width:min(570px,94vw);max-height:82vh;overflow:auto;background:linear-gradient(145deg,#1c3038f7,#101b22f7);border:1px solid #ffffff30;border-radius:23px;padding:24px;box-shadow:0 25px 80px #0008}
+#card h2{margin:0 45px 16px 0;font-size:24px}
+#close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;font-size:18px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #ffffff16}
+.row .emoji{font-size:26px;width:36px}
+.row .info{flex:1}.info small{display:block;color:#aebfc5;margin-top:4px}
+.buy,.gold{background:linear-gradient(135deg,#ffd68d,#db9c49);color:#332417;border:0;padding:11px 14px;border-radius:11px;font-weight:900}
+.buy:disabled{opacity:.4}
+.recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.recipe{padding:13px;text-align:left;border-radius:13px;background:#ffffff0a}
+.recipe b{display:block;margin:5px 0}.recipe small{color:#b9c9cd;line-height:1.4}
+#start,#pauseScreen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#10232deF,#152b2ae8)}
+.startcard{width:min(440px,90vw);padding:30px;border:1px solid #ffffff25;border-radius:25px;background:#10212bd9;box-shadow:0 20px 80px #0008}
+.logo{font-size:clamp(30px,5vw,54px);font-weight:1000;letter-spacing:1px;color:#ffd58a;text-shadow:0 4px 0 #6e492c}
+.startcard p{line-height:1.5;color:#d4e0e2}
+#play{margin-top:12px;padding:15px 38px;min-width:180px;background:linear-gradient(135deg,#ffd68d,#d88d39);color:#302117;border:0;font-size:16px}
+#pauseScreen{display:none;z-index:11}
+#rotate{display:none;position:fixed;inset:0;z-index:30;background:#101a20;color:white;align-items:center;justify-content:center;text-align:center;padding:30px}
+#rotate div{font-size:20px;font-weight:800}#rotate span{display:block;font-size:44px;margin-bottom:18px}
+#toast{position:fixed;top:90px;left:50%;transform:translateX(-50%);padding:11px 17px;border-radius:12px;background:#10232deb;border:1px solid #ffffff25;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+@media(orientation:portrait){#rotate{display:flex}#top,#joy,#actions,#run,#prompt,#area{display:none!important}}
+@media(max-height:430px){#joy{width:110px;height:110px;left:18px;bottom:14px}#knob{left:31px;top:31px;width:48px;height:48px}#actions{bottom:13px;right:14px}.action{width:65px;height:61px}#interact{width:78px;height:75px}#run{right:16px;bottom:94px;width:60px;height:60px}#top{top:8px;left:12px;right:12px}#quest{padding:8px 12px}#money{padding:9px 13px}}
+#jump{background:linear-gradient(145deg,#365b71,#172b37);font-size:24px} #jump span{font-size:10px}\n</style>
+</head>
+<body>
+<div id="start"><div class="startcard"><div class="logo">CHEF CITY</div><p>Живой город. Своя кухня. Твои правила.<br>Исследуй улицы, покупай продукты и открывай ресторан.</p><button id="play">НАЧАТЬ ИГРУ</button><p style="font-size:11px;color:#91a6ac">Поверни телефон горизонтально</p></div></div>
+<div id="ui" style="display:none">
+ <div id="top"><div id="quest" class="glass"><div class="kicker">ТВОЯ ЦЕЛЬ</div><strong id="mission">Найди продуктовый магазин</strong></div><div id="money" class="glass">◉ <span id="cash">100</span></div><div id="clock" class="glass" style="padding:12px 14px;font-weight:800">☀ 08:00</div><button id="gps" title="GPS">📍 GPS</button><button id="sound" title="Звук" style="padding:12px">🔊</button><button id="pause">Ⅱ</button></div>
+ <div id="joy"><div id="knob"></div></div>
+ <button id="run">➤<span>БЕЖАТЬ</span></button>
+ <div id="actions"><button class="action" id="bag">▣<span>СУМКА</span></button><button class="action" id="jump">↟<span>ПРЫЖОК</span></button><button class="action" id="interact">✋<span>ДЕЙСТВИЕ</span></button></div>
+ <div id="prompt" class="glass">Исследуй город</div><div id="gpsbeam">GPS · МАРШРУТ</div><div id="area">ЦЕНТР ГОРОДА</div>
+</div>
+<div id="modal"><div id="card"><button id="close">×</button><h2 id="title"></h2><div id="content"></div></div></div>
+<div id="pauseScreen"><div class="startcard"><div class="logo" style="font-size:35px">ПАУЗА</div><p>Прогресс сохраняется автоматически.</p><button id="resume" class="gold">ПРОДОЛЖИТЬ</button></div></div>
+<div id="rotate"><div><span>↻</span>Поверни телефон горизонтально<br><small style="font-size:13px;color:#b4c3c9">Игра рассчитана на широкий экран</small></div></div>
+<div id="toast"></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#9acbd8');scene.fog=new THREE.Fog('#9acbd8',75,190);
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,320);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,.75));renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xdff6ff,0x52614a,2.25);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffe7c0,3.0);sun.position.set(-22,34,18);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.left=-42;sun.shadow.camera.right=42;sun.shadow.camera.top=42;sun.shadow.camera.bottom=-42;scene.add(sun);
+function texture(base,detail,seed=1){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,256,256);let n=seed;for(let i=0;i<1000;i++){n=(n*1664525+1013904223)>>>0;const x=n%256;n=(n*1664525+1013904223)>>>0;const y=n%256;g.globalAlpha=.08+(n%10)/100;g.fillStyle=detail;g.fillRect(x,y,1+n%5,1+n%4)}g.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t}
+function mat(color,rough=.85,map=null){return new THREE.MeshStandardMaterial({color,roughness:rough,map})}
+const mats={grass:mat('#729d61',1,texture('#729d61','#c0d79b',2)),asphalt:mat('#3b454c',1,texture('#424b50','#9aa0a1',5)),pavement:mat('#c8c2b5',.95,texture('#c8c2b5','#ffffff',9)),brick:mat('#bb8b69',.9,texture('#b78c70','#714e40',4)),cream:mat('#e4d7bc',.9,texture('#e4d7bc','#a18c6f',7)),blue:mat('#69899a',.7,texture('#69899a','#c4d4d8',8)),glass:new THREE.MeshStandardMaterial({color:'#78c6d4',roughness:.18,metalness:.12,emissive:'#ffb36a',emissiveIntensity:.12}),dark:mat('#252e32'),wood:mat('#80563b',.9,texture('#80563b','#d0a06b',3)),leaf:mat('#39804b'),gold:mat('#f3bf65'),white:mat('#f2e8d8')};
+const solids=[],sites=[],decor=[],npcs=[],traffic=[];
+function cube(parent,x,y,z,w,h,d,material,collision=false){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);if(collision)solids.push({x:x+parent.position.x,z:z+parent.position.z,rx:w/2,rz:d/2});return m}
+function cyl(parent,x,y,z,r,h,material,seg=12){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function spriteLabel(text){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle='#182b31';g.beginPath();g.roundRect(5,5,502,118,18);g.fill();g.strokeStyle='#f4c574';g.lineWidth=5;g.stroke();g.font='bold 40px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff2d4';g.fillText(text,256,65);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c)}));s.scale.set(4.8,1.2,1);return s}
+function tree(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cyl(g,0,.85,0,.18,1.7,mats.wood);for(let i=0;i<3;i++){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(1.0-i*.12,1),mat(i%2?'#438b50':'#347848'));m.position.set((i-1)*.35,1.8+i*.48,0);m.castShadow=true;g.add(m)}solids.push({x,z,rx:.45,rz:.45})}
+function lamp(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cyl(g,0,1.5,0,.07,3,mats.dark);const bulb=cube(g,0,3.1,0,.45,.35,.45,new THREE.MeshStandardMaterial({color:'#ffe5a1',emissive:'#ffb52e',emissiveIntensity:.15}));const glow=new THREE.PointLight(0xffc86b,0,10,2);glow.position.set(0,2.95,0);g.add(glow);decor.push({lamp:true,glow,bulb});solids.push({x,z,rx:.2,rz:.2})}
+function building(name,x,z,w,d,h,color,type){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const wall=mat(color,.88,texture(color,'#ffffff',Math.round(x*x+z*z+13)));
+ cube(g,0,h/2,0,w,h,d,wall,true);cube(g,0,h+.1,0,w+.3,.22,d+.3,mats.dark);
+ for(let y=1.25;y<h-.4;y+=1.55){for(let xx=-w/2+.75;xx<w/2-.25;xx+=1.45){cube(g,xx,y,d/2+.012,.68,.78,.06,mats.glass);cube(g,xx,y,-d/2-.012,.68,.78,.06,mats.glass)}}
+ // clearly visible entrance and awning
+ cube(g,0,.95,d/2+.045,1.15,1.9,.12,mats.wood);
+ cube(g,0,2.05,d/2+.38,2.25,.15,.8,type==='store'?mat('#c43e32'):type==='restaurant'?mat('#283c49'):mat('#d9a45c'));
+ const sign=spriteLabel(name);sign.position.set(0,h+.85,d/2+.4);g.add(sign);
+ // interaction marker is OUTSIDE the wall, on the sidewalk
+ sites.push({name,type,x,z:z+d/2+2.3,range:3.4});
+}
+// MASTER CITY PLAN: roads first, then sidewalks/crosswalks, then building lots.
+cube(scene,0,-.3,0,240,.5,240,mats.grass);
+const roadCoords=[];for(let q=-80;q<=80;q+=40)roadCoords.push(q);
+for(const q of roadCoords){
+  // Road corridors, curb lanes and sidewalks are continuous and reserved before placing lots.
+  cube(scene,q,.005,0,11,.09,220,mats.asphalt);
+  cube(scene,0,.005,q,220,.09,11,mats.asphalt);
+  cube(scene,q,.06,-7.1,1.5,.12,220,mats.pavement);cube(scene,q,.06,7.1,1.5,.12,220,mats.pavement);
+  cube(scene,-7.1,.06,q,220,.12,1.5,mats.pavement);cube(scene,7.1,.06,q,220,.12,1.5,mats.pavement);
+  for(let p=-106;p<=106;p+=5){
+    cube(scene,q,.07,p,.12,.025,2.2,mats.gold);
+    cube(scene,p,.07,q,2.2,.025,.12,mats.gold);
+  }
+  // Crosswalk stripes at each intersection approach.
+  for(const side of [-1,1])for(let k=-2;k<=2;k++){
+    cube(scene,q+k*1.45,.075,q+side*8.1,1.0,.025,2.5,mats.white);
+    cube(scene,q+side*8.1,.075,q+k*1.45,2.5,.025,1.0,mats.white);
+  }
+}
+// Streetlights live on corners/sidewalks, never in the road or building footprints.
+for(const q of roadCoords)for(const side of [-1,1]){lamp(q+side*8.4,-12);lamp(q+side*8.4,12);}
+// Lot centers are midway between reserved road corridors.
+const lots=[-60,-20,20,60];
+for(let zi=0;zi<lots.length;zi++)for(let xi=0;xi<lots.length;xi++){
+  const x=lots[xi],z=lots[zi];
+  // Keep the outer blocks lighter and put a building only on a clear lot.
+  if((xi+zi)%3===0 && Math.abs(x)<50 && Math.abs(z)<50)continue;
+  const types=[
+    ['МАГАЗИН','store','#c7a17a'],['ЖИЛОЙ ДОМ','home','#d9a18a'],
+    ['РЕСТОРАН','restaurant','#aebfca'],['ПЕКАРНЯ','bakery','#d6d2a9'],
+    ['АВТОСЕРВИС','garage','#c6a9d0'],['ЦЕНТР ПРОФЕССИЙ','jobs','#b4c7a0'],
+    ['КАФЕ','cafe','#dba6a0'],['ЗАВОД','factory','#9aa8ad']
+  ];
+  const t=types[(xi*3+zi*5)%types.length];
+  building(t[0],x,z,11,11,t[1]==='factory'?10:8,t[2],t[1]);
+  // A paved access path connects each building entrance to the nearest sidewalk.
+  const sidewalkZ=Math.round((z+8)/40)*40-7.1;
+  const pathStart=z+8/2+2.3;
+  if(sidewalkZ>pathStart)cube(scene,x,.065,(pathStart+sidewalkZ)/2,1.8,.08,Math.max(1,sidewalkZ-pathStart),mats.pavement);
+  else cube(scene,x,.065,(pathStart+sidewalkZ)/2,1.8,.08,Math.max(1,pathStart-sidewalkZ),mats.pavement);
+}
+// Public park occupies a reserved lot between roads, with paths and benches.
+cube(scene,-60,.005,20,16,.05,16,mat('#4d8b48'));
+cube(scene,-60,.04,20,2,.08,16,mats.pavement);cube(scene,-60,.04,20,16,.08,2,mats.pavement);
+for(const [px,pz] of [[-65,15],[-55,15],[-65,25],[-55,25]])tree(px,pz);
+for(let k=0;k<3;k++){cube(scene,-62+k*2,.35,20,1.2,.12,.35,mats.wood);cube(scene,-62+k*2,.55,20,.12,.35,.35,mats.dark)}
+// Parked low-poly cars with body, windows, wheels and lights
+function car(x,z,color,rot=0){const g=new THREE.Group();g.position.set(x,.08,z);g.rotation.y=rot;scene.add(g);cube(g,0,.55,0,2.1,.65,3.8,mat(color,.45));cube(g,0,1.03,-.15,1.55,.62,1.85,mats.glass);for(const wx of [-1,1])for(const wz of [-1.15,1.15]){const w=cyl(g,wx,.28,wz,.38,.22,mats.dark,12);w.rotation.z=Math.PI/2}for(const sx of [-.7,.7]){cube(g,sx,.62,1.92,.32,.18,.08,mats.gold);cube(g,sx,.62,-1.92,.32,.18,.08,mat('#c83d35'))}solids.push({x,z,rx:1.3,rz:2});g.userData.driveable=true;return g}
+// Traffic is constrained to the actual cross-shaped roads; no cars spawn inside buildings.
+function trafficCar(axis,lane,pos,color,speed){const g=car(axis==='x'?pos:lane, .08, color, 0); // replace position below; car() expects world coordinates
+ scene.remove(g);solids.splice(solids.length-1,1);const v=car(axis==='x'?pos:lane,axis==='x'?lane:pos,color,axis==='x'?Math.PI/2:0);solids.splice(solids.length-1,1);traffic.push({g:v,axis,lane,speed,pos,phase:Math.random()*220});return v}
+const trafficColors=['#d94e43','#e5b74c','#4d83a5','#e9e7df','#3c464c','#4c9b75','#8c6dc0'];
+for(let i=0;i<12;i++){const axis=i%2?'z':'x',road=[-80,-40,0,40,80][i%5],lane=axis==='x'?road+(i%4<2?-2.5:2.5):road+(i%4<2?2.5:-2.5);trafficCar(axis,lane,-105+((i*41)%210),trafficColors[i%trafficColors.length],(i%2?1:-1)*(3.6+(i%3)*.45));}
+// A few parked vehicles only in marked curbside bays, never on sidewalks or inside buildings.
+// Marked parking bays beside the main avenue, away from building footprints.
+cube(scene,14,.012,-8,8,.035,15,mats.pavement);
+for(let k=0;k<3;k++){cube(scene,11.5+k*2.5,.045,-8, .08,.025,13, mats.gold);car(11.5+k*2.5,-8,k===0?'#d94e43':k===1?'#e5b74c':'#4d83a5',0)}
+// Small public park with paths and benches, placed in an open block.
+cube(scene,-22,.005,18,18,.05,18,mat('#4d8b48'));
+cube(scene,-22,.04,18,2,.08,18,mats.pavement);cube(scene,-22,.04,18,18,.08,2,mats.pavement);
+for(const [px,pz] of [[-28,13],[-16,13],[-28,23],[-16,23]]) tree(px,pz);
+for(let k=0;k<3;k++){cube(scene,-24+k*2,.35,18,1.2,.12,.35,mats.wood);cube(scene,-24+k*2,.55,18,.12,.35,.35,mats.dark)}
+// small street details
+for(let i=0;i<5;i++){const x=-17+i*1.8;cube(scene,x,.38,-15,.9,.75,.9,[mat('#b9573e'),mat('#e4b65b'),mat('#5e9365')][i%3]);}
+function human(x,z,shirtColor){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cube(g,0,1.08,0,.48,.68,.3,mat(shirtColor));cyl(g,0,1.68,0,.22,.4,mat('#d9a17e'));cube(g,-.14,.43,0,.17,.65,.2,mat('#33465c'));cube(g,.14,.43,0,.17,.65,.2,mat('#33465c'));npcs.push({g,x,z,t:Math.random()*6,route:Math.random()<.5?'x':'z',dir:Math.random()<.5?-1:1,phase:Math.random()*6.28,centerX:x,centerZ:z});return g}
+// Pedestrians are distributed across the whole city and walk along sidewalk corridors.
+const pedestrianColors=['#c56d5c','#719ac0','#bb8bb6','#d0ad62','#72a18c','#d2a85c','#9b8bc4','#e1e1d4','#bd7650'];
+for(let i=0;i<22;i++){
+ const axis=i%2?'x':'z',corridor=-80+((i*37)%9)*20,along=-96+((i*29)%13)*15;
+ const x=axis==='x'?along:(corridor+(i%4<2?-8.4:8.4));
+ const z=axis==='x'?(corridor+(i%4<2?-8.4:8.4)):along;
+ const g=human(x,z,pedestrianColors[i%pedestrianColors.length]);
+ const n=npcs[npcs.length-1];n.route=axis;n.centerX=x;n.centerZ=z;n.dir=(i%3===0?-1:1);n.phase=(i%5)*1.15;n.speed=.75+(i%4)*.12;n.span=24+(i%5)*9;
+}
+
+// Sunset city extras: boundary mountains, fountain plaza, cinema and warm lit windows.
+const mountainMat=mat('#34394d',1,texture('#34394d','#626779',21)),snowMat=mat('#a4a5b2',1,texture('#a4a5b2','#dedee4',22));
+// A continuous overlapping mountain ridge surrounds the playable world, hiding the map boundary.
+for(let i=0;i<64;i++){
+ const a=i/64*Math.PI*2,rad=132+Math.sin(i*1.7)*2.5,x=Math.cos(a)*rad,z=Math.sin(a)*rad;
+ const h=28+(i%7)*3.5,w=17+(i%4)*2;
+ const m=new THREE.Mesh(new THREE.ConeGeometry(w,h,7),mountainMat);m.position.set(x,h/2-1,z);m.rotation.y=a+Math.PI/7;scene.add(m);
+ if(i%3===0){const ridge=new THREE.Mesh(new THREE.ConeGeometry(w*.48,h*.43,7),snowMat);ridge.position.set(x,h*.72,z);ridge.rotation.y=a+Math.PI/7;scene.add(ridge)}
+}
+// Fountain plaza in a reserved green block.
+cube(scene,60,.005,20,18,.05,18,mat('#4f8b50'));
+cube(scene,60,.04,20,12,.12,12,mats.pavement);
+cyl(scene,60,.15,20,4.2,.28,mat('#8e9ba0'),24);
+cyl(scene,60,.32,20,3.5,.12,mat('#5ca7c3'),24);
+cyl(scene,60,.72,20,.45,.8,mat('#9ba9af'),16);
+const waterMat=new THREE.MeshStandardMaterial({color:'#65c7e8',roughness:.18,metalness:.25,emissive:'#145d79',emissiveIntensity:.35});
+const waterJet=cyl(scene,60,1.25,20,.16,.95,waterMat,12);waterJet.userData.fountain=true;
+for(let i=0;i<8;i++){const a=i*Math.PI/4;const j=cyl(scene,60+Math.cos(a)*2.1,.68,20+Math.sin(a)*2.1,.08,.7,waterMat,8);j.rotation.z=Math.cos(a)*-.35;j.rotation.x=Math.sin(a)*.35;}
+// Add visible traffic signals at key junctions. Cars are routed on the lanes; signals provide visual cues.
+const signalLights=[];
+for(const q of [-40,0,40]){
+ for(const side of [-1,1]){
+  const g=new THREE.Group();g.position.set(q+side*8.7,0,q-8.5);scene.add(g);
+  cyl(g,0,1.9,0,.09,3.8,mats.dark);
+  cube(g,0,3.45,0,.5,.95,.35,mats.dark);
+  const bulbs=[];
+  for(let b=0;b<3;b++){const c=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),new THREE.MeshStandardMaterial({color:['#e7473d','#e9bd45','#42d477'][b],emissive:['#e7473d','#e9bd45','#42d477'][b],emissiveIntensity:b===0?1.5:.08}));c.position.set(0,3.72-b*.28,.2);g.add(c);bulbs.push(c)}
+  signalLights.push({bulbs,phase:Math.random()*10});
+ }
+}
+
+// Player model: assembled 3D geometry with apron, hair, arms, legs
+const player=new THREE.Group();scene.add(player);const avatar=new THREE.Group();player.add(avatar);
+cube(avatar,0,1.08,0,.55,.68,.32,mat('#f2eee4'));cube(avatar,0,.96,.19,.36,.48,.035,mat('#34434b'));
+cyl(avatar,0,1.72,0,.235,.43,mat('#c99573'));cyl(avatar,0,1.95,0,.25,.16,mat('#47352e'));
+cube(avatar,-.37,1.08,0,.16,.57,.18,mat('#f2eee4'));cube(avatar,.37,1.08,0,.16,.57,.18,mat('#f2eee4'));
+cube(avatar,-.16,.43,0,.19,.65,.22,mat('#303b46'));cube(avatar,.16,.43,0,.19,.65,.22,mat('#303b46'));
+cube(avatar,-.16,.11,.06,.23,.17,.34,mat('#e9e6dc'));cube(avatar,.16,.11,.06,.23,.17,.34,mat('#e9e6dc'));
+player.position.set(0,0,1);
+let money=100,inventory={},cooking=null,order=null,paused=true,started=false,running=false;
+const recipes={'Бургер':{icon:'🍔',items:['Булочка','Котлета','Салат'],reward:32,steps:['Подготовить ингредиенты','Обжарить котлету','Собрать бургер']},'Пицца':{icon:'🍕',items:['Тесто','Сыр','Томат'],reward:38,steps:['Раскатать тесто','Добавить начинку','Запечь пиццу']},'Паста':{icon:'🍝',items:['Паста','Томат','Сыр'],reward:28,steps:['Сварить пасту','Добавить томат','Перемешать']},'Салат':{icon:'🥗',items:['Помидор','Огурец','Салат'],reward:24,steps:['Нарезать овощи','Смешать салат']},'Суп':{icon:'🍲',items:['Морковь','Картофель','Бульон'],reward:30,steps:['Нарезать овощи','Варить суп','Довести до готовности']}};
+const products=[['Булочка','🥯',5],['Котлета','🥩',9],['Салат','🥬',4],['Тесто','🫓',8],['Сыр','🧀',7],['Томат','🍅',4],['Паста','🍝',6],['Помидор','🍅',4],['Огурец','🥒',3],['Морковь','🥕',3],['Картофель','🥔',4],['Бульон','🧃',5]];
+function toast(s){$('toast').textContent=s;$('toast').style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').style.opacity=0,2200)}
+function save(){try{localStorage.setItem('chefCityLandscape',JSON.stringify({money,inventory}))}catch{}$('cash').textContent=money}
+try{const s=JSON.parse(localStorage.getItem('chefCityLandscape')||'{}');money=s.money??100;inventory=s.inventory||{}}catch{}
+function panel(title,html){$('title').textContent=title;$('content').innerHTML=html;$('modal').style.display='flex';paused=true}
+function closePanel(){$('modal').style.display='none';paused=false;soundBeep(360,.06);save()}
+$('close').onclick=closePanel;
+function shop(){let h='<p style="color:#b9c9cd">Свежие продукты для твоей кухни. Место в сумке ограничено — 16 предметов.</p>';for(const [n,e,p] of products)h+=`<div class="row"><div class="emoji">${e}</div><div class="info"><b>${n}</b><small>В сумке: ${inventory[n]||0} · Цена ${p} монет</small></div><button class="buy" data-buy="${n}">Купить</button></div>`;panel('Продуктовый рынок',h);document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const p=products.find(p=>p[0]===b.dataset.buy);if(money<p[2])return toast('Не хватает монет');if(Object.values(inventory).reduce((a,b)=>a+b,0)>=16)return toast('Сумка полна');money-=p[2];inventory[p[0]]=(inventory[p[0]]||0)+1;shop();save()})}
+function kitchen(){let h='<p style="color:#b9c9cd">Выбирай рецепт. Для блюда нужны все указанные ингредиенты.</p><div class="recipes">';for(const [n,r] of Object.entries(recipes))h+=`<button class="recipe" data-recipe="${n}"><span style="font-size:26px">${r.icon}</span><b>${n}</b><small>${r.items.join(' · ')}<br>Награда: ${r.reward} монет</small></button>`;h+='</div>';if(cooking)h+=`<div class="row"><div class="info"><b>${recipes[cooking.name].icon} ${cooking.name} — ${cooking.step>=cooking.steps.length?'готово':cooking.steps[cooking.step]}</b><small>Этап ${Math.min(cooking.step+1,cooking.steps.length)} из ${cooking.steps.length}</small></div><button class="buy" id="step">${cooking.step>=cooking.steps.length?'Забрать':'Следующий этап'}</button></div>`;panel('Домашняя кухня',h);document.querySelectorAll('[data-recipe]').forEach(b=>b.onclick=()=>{if(cooking)return toast('Сначала закончи текущее блюдо');const n=b.dataset.recipe,r=recipes[n],missing=r.items.filter(i=>!(inventory[i]>0));if(missing.length)return toast('Не хватает: '+missing.join(', '));r.items.forEach(i=>inventory[i]--);cooking={name:n,step:0,steps:r.steps};kitchen();save()});const step=$('step');if(step)step.onclick=()=>{if(cooking.step<cooking.steps.length){cooking.step++;kitchen()}else{inventory['Готовое '+cooking.name]=(inventory['Готовое '+cooking.name]||0)+1;toast('Блюдо готово! Отнеси его в ресторан.');cooking=null;kitchen();save()}}}
+function bag(){let h='<p style="color:#b9c9cd">Предметы, которые ты носишь с собой.</p>';const entries=Object.entries(inventory).filter(([k,v])=>v>0);if(!entries.length)h+='<p>Пока пусто. Найди MARKET и купи ингредиенты.</p>';for(const [n,v] of entries){const p=products.find(p=>p[0]===n);h+=`<div class="row"><div class="emoji">${p?p[1]:'🍽️'}</div><div class="info"><b>${n}</b><small>Количество: ${v}</small></div></div>`}panel('Инвентарь',h)}
+function restaurant(){if(!order){order=Object.keys(recipes)[Math.floor(Math.random()*5)];}const h=`<div class="row"><div class="emoji">${recipes[order].icon}</div><div class="info"><b>Заказ дня: ${order}</b><small>Награда за правильное блюдо: ${recipes[order].reward} монет</small></div></div><p style="color:#b9c9cd">Приготовь блюдо дома, затем вернись сюда и подай заказ.</p><button class="buy" id="serve">Подать заказ</button>`;panel('Ресторан',h);$('serve').onclick=()=>{const k='Готовое '+order;if(!inventory[k])return toast('Сначала приготовь '+order);inventory[k]--;money+=recipes[order].reward;toast('Заказ выполнен! +'+recipes[order].reward+' монет');order=null;save();restaurant()}}
+let target=null;
+let activeJob=null,repairStep=0;const jobNames=['Автомеханик','Курьер','Повар','Таксист','Строитель','Уборщик','Продавец','Фермер'];
+function jobs(){let h='<p>Выбирай профессию, выполняй задания и получай деньги. Задания можно проходить снова.</p>';for(const j of jobNames)h+=`<div class="row"><div class="emoji">${({'Автомеханик':'🔧','Курьер':'📦','Повар':'🍳','Таксист':'🚕','Строитель':'🧱','Уборщик':'🧹','Продавец':'🛒','Фермер':'🌱'})[j]}</div><div class="info"><b>${j}</b><small>${j==='Автомеханик'?'Осмотри машину, почини двигатель и колёса':j==='Курьер'?'Доставь посылку клиенту':'Выполни смену и получи зарплату'} · 35–70 монет</small></div><button class="buy" data-job="${j}">Устроиться</button></div>`;panel('Центр профессий',h);document.querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>{activeJob=b.dataset.job;repairStep=0;closePanel();if(activeJob==='Автомеханик')toast('Задание: подойди к машине у автосервиса и нажми E');else toast('Смена началась: выполни рабочее задание!');});}
+function garage(){if(activeJob!=='Автомеханик'){panel('Автосервис','<p>Здесь ремонтируют автомобили. Сначала устройся автомехаником в БЮРО РАБОТЫ.</p>');return}const steps=['Осмотри автомобиль','Почини двигатель','Проверь колёса','Выдай машину клиенту'];panel('Заказ автомеханика',`<p>Клиент привёз машину на ремонт. Выполняй этапы по порядку.</p><div class="row"><div class="info"><b>${steps[Math.min(repairStep,3)]}</b><small>Этап ${Math.min(repairStep+1,4)} из 4</small></div><button class="buy" id="repair">${repairStep===3?'Завершить заказ':'Выполнить'}</button></div>`);$('repair').onclick=()=>{if(repairStep<3){repairStep++;garage()}else{money+=70;repairStep=0;toast('Машина отремонтирована! +70 монет');save();garage()}}}
+let drivingCar=null;
+
+
+let currentInterior=null,interiorFloor=1,seated=false;
+function enterBuilding(site){
+ currentInterior=site;interiorFloor=1;seated=false;
+ const renderInterior=()=>{
+  const floors=Math.max(2,Math.min(6,Math.floor((site.type==='factory'?5:4))));
+  panel('🏢 '+site.name,`<p>Внутри: холл, лестница, этажи и зона отдыха.</p><div class="row"><div class="info"><b>Этаж ${interiorFloor} из ${floors}</b><small>${seated?'Ты сидишь на стуле.':'Можно подняться по лестнице или присесть отдохнуть.'}</small></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="buy" id="floorDown" ${interiorFloor<=1?'disabled':''}>⬇ Этаж ниже</button><button class="buy" id="floorUp" ${interiorFloor>=floors?'disabled':''}>⬆ Подняться</button><button class="buy" id="sitChair">${seated?'Встать':'🪑 Сесть на стул'}</button></div><button class="buy" id="leaveRoom">Выйти на улицу</button>`);
+  $('floorUp').onclick=()=>{if(interiorFloor<floors){interiorFloor++;seated=false;renderInterior();soundBeep(460,.05)}};
+  $('floorDown').onclick=()=>{if(interiorFloor>1){interiorFloor--;seated=false;renderInterior();soundBeep(400,.05)}};
+  $('sitChair').onclick=()=>{seated=!seated;renderInterior();soundBeep(seated?280:360,.05)};
+  $('leaveRoom').onclick=()=>{currentInterior=null;seated=false;closePanel()};
+ };
+ renderInterior();
+}
+
+// GPS destination: tap GPS to cycle through all buildings; the selected place gets a yellow vertical beacon.
+let gpsIndex=0;
+const gpsBeam=new THREE.Mesh(new THREE.CylinderGeometry(.12,.75,13,12,1,true),new THREE.MeshBasicMaterial({color:0xffd52a,transparent:true,opacity:.28,depthWrite:false}));
+gpsBeam.visible=false;scene.add(gpsBeam);
+const gpsRing=new THREE.Mesh(new THREE.TorusGeometry(1.5,.12,8,24),new THREE.MeshBasicMaterial({color:0xffdf38,emissive:0x9b7200,emissiveIntensity:.8}));
+gpsRing.rotation.x=Math.PI/2;gpsRing.visible=false;scene.add(gpsRing);
+$('gps').onclick=()=>{if(!sites.length)return;gpsIndex=(gpsIndex+1)%sites.length;const s=sites[gpsIndex];gpsBeam.position.set(s.x,6.5,s.z);gpsRing.position.set(s.x,.16,s.z);gpsBeam.visible=gpsRing.visible=true;$('gpsbeam').style.display='block';$('gpsbeam').textContent='GPS · '+s.name;toast('Маршрут выбран: '+s.name);soundBeep(740,.1)};
+
+function interact(){if(drivingCar){if(drivingCar.solidRef){solids.push(drivingCar.solidRef);drivingCar.solidRef=null}drivingCar=null;player.visible=true;toast('Ты вышел из машины');soundBeep(260,.08);return}let nearest=null,nd=5;for(const c of traffic){const d=Math.hypot(player.position.x-c.g.position.x,player.position.z-c.g.position.z);if(d<nd){nd=d;nearest=c}}for(const o of scene.children){if(o.userData?.driveable){const d=Math.hypot(player.position.x-o.position.x,player.position.z-o.position.z);if(d<nd){nd=d;nearest={g:o,axis:'parked',pos:0,lane:0,speed:0,solidRef:solids.find(q=>Math.abs(q.x-o.position.x)<.01&&Math.abs(q.z-o.position.z)<.01)}}}}if(nearest){if(nearest.solidRef){const si=solids.indexOf(nearest.solidRef);if(si>=0)solids.splice(si,1)}drivingCar=nearest;player.visible=false;toast('Ты за рулём! Джойстик — газ и поворот, действие — выйти');soundBeep(620,.1);return}if(!target)return toast('Подойди ближе к машине или зданию');soundBeep(480,.07); if(target.type==='store')shop();else if(target.type==='home')kitchen();else if(target.type==='restaurant')restaurant();else if(target.type==='garage')garage();else if(target.type==='jobs')jobs();else enterBuilding(target)}
+$('interact').onclick=interact;$('bag').onclick=bag;
+$('play').onclick=()=>{$('start').style.display='none';$('ui').style.display='block';started=true;paused=false;toast('Добро пожаловать! Найди магазин MARKET.');save()};
+$('pause').onclick=()=>{$('pauseScreen').style.display='flex';paused=true;save()};$('resume').onclick=()=>{$('pauseScreen').style.display='none';paused=false};
+$('run').onpointerdown=e=>{running=true;e.currentTarget.setPointerCapture(e.pointerId)};['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('run').addEventListener(ev,()=>running=false));
+const joy=$('joy'),knob=$('knob');let joyId=null,move={x:0,y:0};
+function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy,L=Math.hypot(dx,dy),max=r.width*.31;if(L>max){dx*=max/L;dy*=max/L}move.x=dx/max;move.y=dy/max;knob.style.left=(r.width/2-27+dx)+'px';knob.style.top=(r.height/2-27+dy)+'px'}
+joy.onpointerdown=e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;move={x:0,y:0};knob.style.left='';knob.style.top=''}joy.onpointerup=joyEnd;joy.onpointercancel=joyEnd;
+let yaw=0,pitch=.24,drag=null;
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){drag={id:e.pointerId,x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId)}});
+renderer.domElement.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;yaw-=(e.clientX-drag.x)*.0055;pitch=Math.max(-.08,Math.min(.7,pitch+(e.clientY-drag.y)*.003));drag.x=e.clientX;drag.y=e.clientY});
+function endDrag(e){if(drag&&drag.id===e.pointerId)drag=null}renderer.domElement.addEventListener('pointerup',endDrag);renderer.domElement.addEventListener('pointercancel',endDrag);
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e')interact()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+const clock=new THREE.Clock();
+let dayClock=18*60+20,nightBlend=0,lastClockPaint=0;let jumpVelocity=0,groundY=0;
+let audioCtx=null,soundOn=true,ambientOsc=null;
+function soundBeep(freq=520,duration=.08,type='sine',volume=.025){if(!soundOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(volume,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch{}}
+$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent=soundOn?'🔊':'🔇';if(soundOn)soundBeep(660,.12)};
+$('jump').onclick=()=>{if(started&&!paused&&!drivingCar&&player.position.y<=0.025){jumpVelocity=7.2;soundBeep(330,.06,'triangle',.015)}};
+function tick(){requestAnimationFrame(tick);const dt=Math.min(clock.getDelta(),.033);
+ if(started&&!paused){
+  let x=move.x,z=move.y;if(keys.a||keys.arrowleft)x-=1;if(keys.d||keys.arrowright)x+=1;if(keys.w||keys.arrowup)z-=1;if(keys.s||keys.arrowdown)z+=1;
+  const l=Math.hypot(x,z);if(l>.08){x/=Math.max(1,l);z/=Math.max(1,l);const dx=Math.cos(yaw)*x+Math.sin(yaw)*z,dz=-Math.sin(yaw)*x+Math.cos(yaw)*z;const speed=drivingCar?13:(running?6:3.3);const base=drivingCar?drivingCar.g.position:player.position;const nx=base.x+dx*speed*dt,nz=base.z+dz*speed*dt;
+   const hit=solids.some(o=>Math.abs(nx-o.x)<o.rx+.65&&Math.abs(nz-o.z)<o.rz+.65);
+   if(!hit&&Math.abs(nx)<112&&Math.abs(nz)<112){if(drivingCar){drivingCar.g.position.x=nx;drivingCar.g.position.z=nz;drivingCar.g.rotation.y=Math.atan2(dx,dz);player.position.x=nx;player.position.z=nz}else{player.position.x=nx;player.position.z=nz}}player.rotation.y=Math.atan2(dx,dz);
+   avatar.position.y=Math.abs(Math.sin(performance.now()*.012))*.045;
+  }
+  // Jump arc and gravity; landing is clamped to ground.
+  if(!drivingCar){jumpVelocity-=18*dt;player.position.y=Math.max(0,player.position.y+jumpVelocity*dt);if(player.position.y===0&&jumpVelocity<0)jumpVelocity=0;avatar.position.y=player.position.y>0?0:Math.abs(Math.sin(performance.now()*.006))*.025}else{player.position.y=0}
+  // Slower day/night cycle: 8 in-game minutes pass per real second; nights last longer.
+  dayClock=(dayClock+dt*1.5)%(24*60);const hour=dayClock/60,night=hour<6||hour>19,nightFactor=hour<6?(6-hour)/6:hour>19?(hour-19)/5:0;
+  const skyDay=new THREE.Color('#d98569'),skyNight=new THREE.Color('#17182f');scene.background.copy(skyDay).lerp(skyNight,Math.min(.9,nightFactor*.82));scene.fog.color.copy(scene.background);scene.fog.near=night?48:75;scene.fog.far=night?145:190;
+  sun.color.set('#ffb16f');sun.intensity=THREE.MathUtils.lerp(1.35,.20,Math.min(1,nightFactor));hemi.intensity=THREE.MathUtils.lerp(2.35,1.05,Math.min(1,nightFactor));scene.children.forEach(o=>{if(o.isHemisphereLight)o.intensity=hemi.intensity});decor.forEach(d=>{if(d.lamp){d.glow.intensity=nightFactor>.08?2.5:.45;d.bulb.material.emissiveIntensity=nightFactor>.08?3.2:1.0}});
+  
+  // Warm sunset windows, fountain shimmer and timed traffic signal lamps.
+  scene.traverse(o=>{if(o.isMesh&&o.userData.fountain)o.scale.y=1+Math.sin(performance.now()*.004)*.12});
+  signalLights.forEach(sl=>{sl.phase+=dt;const red=(Math.floor(performance.now()/5000)%2)===0;sl.bulbs.forEach((b,i)=>b.material.emissiveIntensity=(red&&i===0)||(!red&&i===2)?1.8:.04)});
+  if(gpsBeam.visible){gpsBeam.position.y=6.5+Math.sin(performance.now()*.004)*.45;gpsRing.rotation.z+=dt*.6}
+if(performance.now()-lastClockPaint>1000){$('clock').textContent=(night?'☾ ':'☀ ')+String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(dayClock%60)).padStart(2,'0');lastClockPaint=performance.now()}
+  // Cars follow road lanes continuously and wrap at the edge of the city.
+  for(const c of traffic){if(drivingCar===c)continue;
+   // Stop at red lights before crossing the next junction.
+   const nextJunction=roadCoords.filter(q=>c.speed>0?q>c.pos:q<c.pos).sort((a,b)=>Math.abs(a-c.pos)-Math.abs(b-c.pos))[0];
+   const redSignal=(Math.floor(performance.now()/5000)%2)===0;
+   const distanceToJunction=nextJunction===undefined?Infinity:Math.abs(nextJunction-c.pos);
+   if(!(redSignal&&distanceToJunction<5.2))c.pos+=c.speed*dt;
+   if(c.pos>116)c.pos=-116;if(c.pos< -116)c.pos=116;
+   if(c.axis==='x'){c.g.position.x=c.pos;c.g.position.z=c.lane}else{c.g.position.x=c.lane;c.g.position.z=c.pos}}
+  // Calm pedestrians patrol long sidewalk routes across multiple blocks and reverse smoothly at route ends.
+  npcs.forEach(n=>{n.phase+=dt*(n.speed||.9);const span=n.span||28;let d=((n.phase+span)%(span*2));if(d>span)d=span*2-d;d=(d-span/2)*(n.dir||1);
+   if(n.route==='x'){n.g.position.x=THREE.MathUtils.clamp(n.centerX+d,-103,103);n.g.position.z=n.centerZ;n.g.rotation.y=(n.dir||1)>0?Math.PI/2:-Math.PI/2}
+   else{n.g.position.x=n.centerX;n.g.position.z=THREE.MathUtils.clamp(n.centerZ+d,-103,103);n.g.rotation.y=(n.dir||1)>0?0:Math.PI}
+  });
+  target=null;let best=Infinity;for(const s of sites){const d=Math.hypot(player.position.x-s.x,player.position.z-s.z);if(d<s.range&&d<best){target=s;best=d}}
+  $('prompt').textContent='';
+  $('area').textContent=target?.type==='store'?'ПРОДУКТОВЫЙ РЫНОК':target?.type==='home'?'ТВОЙ ДОМ':target?.type==='restaurant'?'РЕСТОРАН':target?.type==='garage'?'АВТОСЕРВИС':target?.type==='jobs'?'ЦЕНТР ПРОФЕССИЙ':'ГОРОД';
+  $('mission').textContent=target?'Доступно: '+target.name:activeJob?'Работа: '+activeJob:order?'Заказ: приготовь '+order:'Найди центр профессий';
+  const p=drivingCar?drivingCar.g.position:player.position,desired=new THREE.Vector3(p.x+Math.sin(yaw)*6*Math.cos(pitch),p.y+2.7+6*Math.sin(pitch),p.z+Math.cos(yaw)*6*Math.cos(pitch));camera.position.lerp(desired,1-Math.exp(-dt*5.5));camera.lookAt(p.x,p.y+1.1,p.z);
+ }
+ renderer.render(scene,camera);
+}
+tick();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,.75))});
+save();
+</script>
+</body>
+</html>
